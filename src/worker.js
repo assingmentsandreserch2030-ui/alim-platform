@@ -110,28 +110,53 @@ function safeEqual(a, b) {
   return diff === 0;
 }
 
+// يتسامح مع الفروق الشائعة: المسافات في البداية والنهاية، وعلامات الاقتباس، والأرقام العربية ٠-٩ والفارسية ۰-۹
+function normPass(v) {
+  let s = String(v ?? "").normalize("NFC").trim();
+  if (s.length >= 2 && /^["'].*["']$/.test(s)) s = s.slice(1, -1).trim();
+  return s.replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x6f0));
+}
+
+// يقرأ كلمة المرور حتى لو كُتب اسم المتغير بحروف صغيرة أو بمسافة زائدة
+function adminPassword(env) {
+  if (typeof env.ADMIN_PASSWORD === "string" && env.ADMIN_PASSWORD.trim()) return env.ADMIN_PASSWORD;
+  for (const [k, v] of Object.entries(env)) {
+    if (typeof v === "string" && v.trim() && /PASS|PASSWORD|كلمة/i.test(k.replace(/[^A-Za-z\u0600-\u06FF]/g, ""))) return v;
+  }
+  return "";
+}
+function missingPassword(env) {
+  const names = Object.entries(env).filter(([, v]) => typeof v === "string").map(([k]) => k);
+  return json({
+    error: "لم تُضبط كلمة مرور الإدارة بعد في إعدادات Cloudflare (ADMIN_PASSWORD)",
+    seen: names.length ? "المتغيرات التي يراها الموقع: " + names.join("، ") : "الموقع لا يرى أي متغير",
+  }, 503);
+}
+
 async function login(request, env) {
-  if (!env.ADMIN_PASSWORD) return json({ error: "لم تُضبط كلمة مرور الإدارة بعد في إعدادات Cloudflare (ADMIN_PASSWORD)" }, 503);
+  const ADMIN = adminPassword(env);
+  if (!ADMIN) return missingPassword(env);
   let body = {};
   try { body = await request.json(); } catch {}
-  const pass = String(body.password || "");
+  const pass = normPass(body.password);
   // مقارنة بصمتين متساويتي الطول حتى لا يُستدل على كلمة المرور من زمن الاستجابة
-  const ok = safeEqual(await hmac("alim-check", pass), await hmac("alim-check", env.ADMIN_PASSWORD));
+  const ok = safeEqual(await hmac("alim-check", pass), await hmac("alim-check", normPass(ADMIN)));
   if (!ok) {
     await new Promise((r) => setTimeout(r, 800));
     return json({ error: "كلمة المرور غير صحيحة" }, 401);
   }
   const exp = Date.now() + TOKEN_HOURS * 3600 * 1000;
   const payload = String(exp);
-  return json({ token: payload + "." + (await hmac(env.ADMIN_PASSWORD, payload)), exp });
+  return json({ token: payload + "." + (await hmac(ADMIN, payload)), exp });
 }
 
 async function guard(request, env, fn) {
-  if (!env.ADMIN_PASSWORD) return json({ error: "لم تُضبط كلمة مرور الإدارة بعد" }, 503);
+  const ADMIN = adminPassword(env);
+  if (!ADMIN) return missingPassword(env);
   const auth = request.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   const [payload, sig] = token.split(".");
-  const valid = payload && sig && Number(payload) > Date.now() && safeEqual(sig, await hmac(env.ADMIN_PASSWORD, payload));
+  const valid = payload && sig && Number(payload) > Date.now() && safeEqual(sig, await hmac(ADMIN, payload));
   if (!valid) return json({ error: "انتهت الجلسة، سجّل الدخول من جديد" }, 401);
   return fn();
 }

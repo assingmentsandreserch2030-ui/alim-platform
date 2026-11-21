@@ -236,7 +236,7 @@ async function api(path,opt={}){
   const res=await fetch(path,{...opt,headers:{...(opt.headers||{}),...(token?{authorization:"Bearer "+token}:{})}});
   let data={};try{data=await res.json()}catch(e){}
   if(res.status===401&&path!=="/api/login"){logout();throw new Error(data.error||"انتهت الجلسة")}
-  if(!res.ok) throw new Error(data.error||"تعذّر الاتصال بالخادم");
+  if(!res.ok) throw new Error((data.error||"تعذّر الاتصال بالخادم")+(data.seen?" · "+data.seen:""));
   return data;
 }
 function show(view){$("#login-view").hidden=view!=="login";$("#admin-view").hidden=view!=="admin";$("#logout").hidden=view!=="admin"}

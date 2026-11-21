@@ -56,6 +56,9 @@ nav.links a:hover,nav.links a.on{color:var(--ink);background:var(--sunk)}
 .role-switch button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .cta{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--navy-ink);text-decoration:none;font-weight:700;padding:10px 18px;border-radius:12px;font-size:15px;white-space:nowrap}
 .cta:hover{filter:brightness(1.1)}
+.admin-btn{display:inline-flex;align-items:center;text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border-radius:12px;
+  background:var(--maroon-soft);color:var(--maroon);border:1px solid var(--maroon-line);white-space:nowrap}
+.admin-btn:hover{background:var(--maroon);color:#fff}
 @media (max-width:860px){
   .bar{flex-wrap:wrap;gap:10px}
   nav.links{order:3;flex-basis:100%;margin-inline:-6px}
@@ -240,6 +243,7 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
         <button id="role-teacher" type="button" data-role="teacher" aria-pressed="false">معلم</button>
       </div>
       <a class="cta" href="#grades">ابدأ المراجعة</a>
+      <a class="admin-btn" href="https://alim-platform.assingmentsandreserch2030.workers.dev/admin" lang="en" dir="ltr">Admin</a>
     </div>
   </div>
 </header>
