@@ -210,7 +210,7 @@ async function listItems(env, url) {
   if (grade) items = items.filter((i) => String(i.grade) === grade);
   if (subject) items = items.filter((i) => i.subject === subject);
   items.sort((a, b) => b.created - a.created);
-  return json({ items });
+  return json({ items }, 200, CORS);
 }
 
 // ---------- الرفع والتعديل والحذف ----------

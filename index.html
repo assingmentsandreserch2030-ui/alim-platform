@@ -218,6 +218,15 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
 .subject:hover{border-color:var(--maroon)}
 .subject .chip{background:var(--surface)}
 /* مربع عدد الزوار */
+.counters{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1100px;margin:22px auto 0}
+@media (max-width:980px){.counters{grid-template-columns:1fr 1fr}.counters .visits:first-child{grid-column:1/-1}}
+@media (max-width:640px){.counters{grid-template-columns:1fr}}
+.counters .visits{margin:0;max-width:none}
+.visits.lessons .v-ic{background:var(--teal)}.visits.lessons .v-ic::after{border-color:var(--teal);animation-delay:1.2s}
+.visits.lessons .odo{color:var(--teal)}
+.visits.reviews .v-ic{background:var(--violet)}.visits.reviews .v-ic::after{border-color:var(--violet);animation-delay:.6s}
+.visits.reviews .odo{color:var(--violet)}
+.counters .v-top{flex-wrap:wrap}
 .visits{display:flex;align-items:center;gap:18px;max-width:560px;margin:22px auto 0;padding:18px 22px;border-radius:22px;cursor:pointer;text-align:start;
   background:var(--maroon-soft);border:1px solid var(--maroon-line);box-shadow:0 6px 0 var(--maroon-line);transition:transform .2s,box-shadow .2s;font:inherit;color:inherit;width:100%}
 .visits:hover{transform:translateY(-3px);box-shadow:0 9px 0 var(--maroon-line)}
@@ -398,6 +407,7 @@ function home(){
         <div class="stat"><b>2</b><span>فصلان<br>دراسيان</span></div>
         <div class="stat"><b>4</b><span>مراجعات<br>لكل مادة</span></div>
       </div>
+      <div class="counters">
       <button class="visits" id="visits" type="button" aria-live="polite" aria-label="عدد زوار المنصة">
         <span class="v-ic">${svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',30)}</span>
         <span class="v-body">
@@ -406,6 +416,23 @@ function home(){
           <span class="v-sub">زوار اليوم: <b id="v-today">…</b></span>
         </span>
       </button>
+      <button class="visits lessons" id="lessons" type="button" aria-live="polite" aria-label="عدد الدروس المرفوعة">
+        <span class="v-ic">${svg(ICONS.book,30)}</span>
+        <span class="v-body">
+          <span class="v-top">الدروس المرفوعة <span class="live"><i></i>تتحدّث تلقائيًا</span></span>
+          <span class="odo" id="odo-l"></span>
+          <span class="v-sub">كتب: <b id="l-book">…</b> · أوراق عمل: <b id="l-work">…</b></span>
+        </span>
+      </button>
+      <button class="visits reviews" id="reviews" type="button" aria-live="polite" aria-label="عدد ملفات المراجعة">
+        <span class="v-ic">${svg(ICONS.cal,30)}</span>
+        <span class="v-body">
+          <span class="v-top">ملفات المراجعة <span class="live"><i></i>تتحدّث تلقائيًا</span></span>
+          <span class="odo" id="odo-r"></span>
+          <span class="v-sub">الفصل الأول: <b id="r-t1">…</b> · الفصل الثاني: <b id="r-t2">…</b></span>
+        </span>
+      </button>
+      </div>
     </div>
   </section>
 
@@ -455,8 +482,8 @@ function home(){
 /* عدّاد الزوار: يُحسب كل متصفح مرة واحدة في اليوم */
 const API_BASE=/workers\.dev$|localhost|127\.0\.0\.1/.test(location.hostname)?"":"https://alim-platform.assingmentsandreserch2030.workers.dev";
 let VISITS=null;
-function odo(n){
-  const el=document.getElementById("odo"); if(!el) return;
+function odo(n,id="odo"){
+  const el=document.getElementById(id); if(!el) return;
   const str=n.toLocaleString("en-US");
   el.innerHTML=[...str].map(c=>c===","?'<span class="sep">,</span>':`<span class="d"><span>${[0,1,2,3,4,5,6,7,8,9].map(x=>`<b>${x}</b>`).join("")}</span></span>`).join("");
   const cols=[...el.querySelectorAll(".d span")], digits=str.replace(/,/g,"");
@@ -469,7 +496,28 @@ function showVisits(){
   const t=document.getElementById("v-today"); t&&countUp(t,VISITS.today);
   const b=document.getElementById("visits"); b&&b.setAttribute("aria-label",`عدد زوار المنصة ${VISITS.total}، وزوار اليوم ${VISITS.today}`);
 }
+let LESSONS=null;
+function showLessons(){
+  if(!LESSONS) return;
+  const L=LESSONS;
+  odo(L.book+L.work,"odo-l"); odo(L.review,"odo-r");
+  [["l-book",L.book],["l-work",L.work],["r-t1",L.t1],["r-t2",L.t2]].forEach(([id,v])=>{const e=document.getElementById(id);e&&countUp(e,v)});
+  const a=document.getElementById("lessons"); a&&a.setAttribute("aria-label",`عدد الدروس المرفوعة ${L.book+L.work}`);
+  const b=document.getElementById("reviews"); b&&b.setAttribute("aria-label",`عدد ملفات المراجعة ${L.review}`);
+}
+function initLessons(){
+  const boxes=["lessons","reviews"].map(id=>document.getElementById(id)).filter(Boolean); if(!boxes.length) return;
+  boxes.forEach(b=>b.onclick=()=>{const v=LESSONS;if(!v)return;odo(0,"odo-l");odo(0,"odo-r");setTimeout(()=>{LESSONS=v;showLessons()},350)});
+  if(LESSONS){showLessons();return}
+  odo(0,"odo-l");odo(0,"odo-r");
+  fetch(API_BASE+"/api/items").then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    const L={review:0,book:0,work:0,t1:0,t2:0};
+    (d.items||[]).forEach(i=>{if(i.type in L)L[i.type]++;if(i.type==="review")L[i.term===2?"t2":"t1"]++});
+    LESSONS=L;showLessons();
+  }).catch(()=>boxes.forEach(b=>b.hidden=true));
+}
 function initVisits(){
+  initLessons();
   const box=document.getElementById("visits"); if(!box) return;
   box.onclick=()=>{const v=VISITS;if(!v)return;odo(0);setTimeout(()=>{VISITS=v;showVisits()},350)};
   if(VISITS){showVisits();return}
