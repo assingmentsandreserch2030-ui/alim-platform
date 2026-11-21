@@ -383,12 +383,14 @@ ICONS.socialq=ICONS.social;ICONS.sciuni=ICONS.science;ICONS.chemistry=ICONS.scie
 const svg=(p,s=24)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 
 const CHEST=`<svg class="chest" viewBox="0 0 170 120" aria-hidden="true">
-  <rect x="6" y="44" width="158" height="72" rx="10" fill="var(--wood)" stroke="var(--wood-dark)" stroke-width="4"/>
-  <path d="M10 66h150M10 90h150" stroke="var(--wood-dark)" stroke-width="3" opacity=".55"/>
-  <path d="M14 46c0-26 18-40 71-40s71 14 71 40z" fill="var(--wood)" stroke="var(--wood-dark)" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M30 28h110" stroke="var(--wood-dark)" stroke-width="3" opacity=".55"/>
-  <rect x="66" y="40" width="38" height="40" rx="7" fill="var(--lock)" stroke="var(--wood-dark)" stroke-width="3"/>
-  <circle cx="85" cy="56" r="5" fill="var(--wood-dark)"/><rect x="82.5" y="58" width="5" height="11" rx="2" fill="var(--wood-dark)"/>
+  <!-- كتاب مفتوح تخرج منه أيقونات المواد -->
+  <path d="M8 40c26-8 52-6 77 6 25-12 51-14 77-6v70c-26-8-52-6-77 6-25-12-51-14-77-6z" fill="var(--maroon)" stroke="color-mix(in srgb,var(--maroon) 70%,#000)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M14 34c24-7 48-5 71 7v68c-23-12-47-14-71-7z" fill="#FFFDF7" stroke="var(--wood-dark)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M156 34c-24-7-48-5-71 7v68c23-12 47-14 71-7z" fill="#FFF8EA" stroke="var(--wood-dark)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M26 52c15-4 31-3 47 4M26 66c15-4 31-3 47 4M26 80c15-4 31-3 47 4M26 94c12-3 24-2 36 2" stroke="var(--wood)" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M144 52c-15-4-31-3-47 4M144 66c-15-4-31-3-47 4M144 80c-15-4-31-3-47 4M144 94c-12-3-24-2-36 2" stroke="var(--wood)" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M85 41v68" stroke="var(--wood-dark)" stroke-width="3"/>
+  <path d="M112 38v26l7-6 7 6V36" fill="var(--teal)"/>
 </svg>`;
 
 let role="student";
