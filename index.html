@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="منصة علِّم: مراجعات وكتب وأوراق عمل لجميع المواد الدراسية في قطر من الصف الأول إلى الثاني عشر">
 <title>منصة علِّم</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
@@ -205,6 +210,8 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
   .pop{transform:translate(calc(-50% + var(--x)),var(--y))}}
 </style>
+</head>
+<body>
 
 <header>
   <div class="wrap bar">
@@ -518,3 +525,5 @@ function render(){
 window.addEventListener("hashchange",()=>{render();const h=location.hash.slice(1);if(!SCROLL[h])window.scrollTo(0,0)});
 render();
 </script>
+</body>
+</html>
