@@ -17,6 +17,9 @@
   // بصمة رمز الإعداد (وليست الرمز نفسه). بالرمز يختار المدير كلمة المرور من صفحة /admin أو يعيد تعيينها
   "vars": { "SETUP_CODE_HASH": "043b43703ee15ce60cf1ade30eea264062a3eedfb459804eac3df5da5adbd26a" },
   // اختياري: يمكن أيضًا وضع كلمة المرور كمتغير سري باسم ADMIN_PASSWORD من لوحة Cloudflare
+  // عدّاد الزوار
+  "durable_objects": { "bindings": [{ "name": "VISITS", "class_name": "VisitCounter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["VisitCounter"] }],
   "keep_vars": true,
   "observability": { "enabled": true }
 }

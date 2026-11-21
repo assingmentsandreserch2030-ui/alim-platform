@@ -217,6 +217,27 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
 .grade:hover .num{background:var(--maroon);color:#fff;box-shadow:0 5px 0 var(--maroon-edge)}
 .subject:hover{border-color:var(--maroon)}
 .subject .chip{background:var(--surface)}
+/* مربع عدد الزوار */
+.visits{display:flex;align-items:center;gap:18px;max-width:560px;margin:22px auto 0;padding:18px 22px;border-radius:22px;cursor:pointer;text-align:start;
+  background:var(--maroon-soft);border:1px solid var(--maroon-line);box-shadow:0 6px 0 var(--maroon-line);transition:transform .2s,box-shadow .2s;font:inherit;color:inherit;width:100%}
+.visits:hover{transform:translateY(-3px);box-shadow:0 9px 0 var(--maroon-line)}
+.visits:active{transform:translateY(2px);box-shadow:0 3px 0 var(--maroon-line)}
+.v-ic{position:relative;width:64px;height:64px;flex-shrink:0;border-radius:18px;background:var(--maroon);color:#fff;display:grid;place-items:center}
+.v-ic::after{content:"";position:absolute;inset:-6px;border-radius:22px;border:2px solid var(--maroon);opacity:0;animation:ring 2.4s ease-out infinite}
+@keyframes ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.25);opacity:0}}
+.v-body{flex:1;min-width:0}
+.v-top{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--muted)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--maroon);background:var(--surface);padding:2px 10px;border-radius:999px}
+.live i{width:8px;height:8px;border-radius:50%;background:#E0475F;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.odo{display:flex;direction:ltr;justify-content:flex-end;font-family:var(--f-display);font-weight:800;font-size:clamp(36px,7vw,52px);line-height:1.1;color:var(--maroon);height:1.1em;overflow:hidden;font-variant-numeric:tabular-nums}
+.odo .d{display:inline-block;width:.62em;height:1.1em;overflow:hidden;position:relative}
+.odo .d span{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.2,.9,.25,1)}
+.odo .d span b{height:1.1em;display:grid;place-items:center;font-weight:800}
+.odo .sep{width:.3em;text-align:center}
+.v-sub{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.v-sub b{color:var(--ink);font-variant-numeric:tabular-nums}
+@media (max-width:440px){.visits{padding:14px 16px;gap:12px}.v-ic{width:52px;height:52px;border-radius:15px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}
   .pop{transform:translate(calc(-50% + var(--x)),var(--y))}}
 </style>
@@ -377,6 +398,14 @@ function home(){
         <div class="stat"><b>2</b><span>فصلان<br>دراسيان</span></div>
         <div class="stat"><b>4</b><span>مراجعات<br>لكل مادة</span></div>
       </div>
+      <button class="visits" id="visits" type="button" aria-live="polite" aria-label="عدد زوار المنصة">
+        <span class="v-ic">${svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',30)}</span>
+        <span class="v-body">
+          <span class="v-top">عدد زوار المنصة <span class="live"><i></i>مباشر</span></span>
+          <span class="odo" id="odo"></span>
+          <span class="v-sub">زوار اليوم: <b id="v-today">…</b></span>
+        </span>
+      </button>
     </div>
   </section>
 
@@ -421,6 +450,35 @@ function home(){
       </div>
     </div>
   </section>`;
+}
+
+/* عدّاد الزوار: يُحسب كل متصفح مرة واحدة في اليوم */
+const API_BASE=/workers\.dev$|localhost|127\.0\.0\.1/.test(location.hostname)?"":"https://alim-platform.assingmentsandreserch2030.workers.dev";
+let VISITS=null;
+function odo(n){
+  const el=document.getElementById("odo"); if(!el) return;
+  const str=n.toLocaleString("en-US");
+  el.innerHTML=[...str].map(c=>c===","?'<span class="sep">,</span>':`<span class="d"><span>${[0,1,2,3,4,5,6,7,8,9].map(x=>`<b>${x}</b>`).join("")}</span></span>`).join("");
+  const cols=[...el.querySelectorAll(".d span")], digits=str.replace(/,/g,"");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>cols.forEach((c,i)=>{c.style.transitionDelay=(i*0.08)+"s";c.style.transform=`translateY(-${digits[i]*1.1}em)`})));
+}
+function countUp(el,to){const t0=performance.now(),d=1400;(function f(t){const p=Math.min(1,(t-t0)/d);el.textContent=Math.round(to*(1-Math.pow(1-p,3))).toLocaleString("en-US");if(p<1)requestAnimationFrame(f)})(t0)}
+function showVisits(){
+  if(!VISITS) return;
+  odo(VISITS.total);
+  const t=document.getElementById("v-today"); t&&countUp(t,VISITS.today);
+  const b=document.getElementById("visits"); b&&b.setAttribute("aria-label",`عدد زوار المنصة ${VISITS.total}، وزوار اليوم ${VISITS.today}`);
+}
+function initVisits(){
+  const box=document.getElementById("visits"); if(!box) return;
+  box.onclick=()=>{const v=VISITS;if(!v)return;odo(0);setTimeout(()=>{VISITS=v;showVisits()},350)};
+  if(VISITS){showVisits();return}
+  odo(0);
+  const day=new Date().toISOString().slice(0,10);
+  let counted=false;try{counted=localStorage.getItem("alim-visit-day")===day}catch(e){}
+  fetch(API_BASE+(counted?"/api/visits":"/api/visit"),{method:counted?"GET":"POST"}).then(r=>r.ok?r.json():Promise.reject())
+    .then(d=>{VISITS=d;if(!counted)try{localStorage.setItem("alim-visit-day",day)}catch(e){};showVisits()})
+    .catch(()=>{box.hidden=true});
 }
 
 function portal(r){
@@ -556,6 +614,7 @@ function render(){
   app.querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{term=+b.dataset.term;render()});
   app.querySelectorAll("[data-track]").forEach(b=>b.onclick=()=>{track=b.dataset.track;render()});
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});
+  initVisits();
   if(SCROLL[h]){const el=document.getElementById(SCROLL[h]);el&&el.scrollIntoView({block:"start"});}
 }
 window.addEventListener("hashchange",()=>{render();const h=location.hash.slice(1);if(!SCROLL[h])window.scrollTo(0,0)});

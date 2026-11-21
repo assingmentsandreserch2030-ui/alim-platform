@@ -1,3 +1,5 @@
+import { DurableObject } from "cloudflare:workers";
+
 // خادم منصة علِّم: يخدم صفحات الموقع، ويحفظ الملفات المرفوعة من صفحة الإدارة في Cloudflare KV.
 // المسارات:
 //   GET    /api/items?grade=&subject=   قائمة الملفات (عامة)
@@ -21,6 +23,7 @@ export default {
       if (path.startsWith("/files/")) return serveFile(request, env, path);
       if (path === "/api/login" && request.method === "POST") return login(request, env);
       if (path === "/api/setup" && request.method === "POST") return setup(request, env);
+      if (path === "/api/visit" || path === "/api/visits") return visits(request, env, path);
       if (path === "/api/items" && request.method === "GET") return listItems(env, url);
       if (path === "/api/items" && request.method === "POST") return guard(request, env, () => createItem(request, env));
       const m = path.match(/^\/api\/items\/([a-z0-9]+)$/);
@@ -297,4 +300,32 @@ async function serveFile(request, env, path) {
       "x-content-type-options": "nosniff",
     },
   });
+}
+
+// ---------- عدّاد الزوار ----------
+// كائن واحد دائم يحفظ العدد الكلي وعدد زوار اليوم (بتوقيت قطر). كل متصفح يُحسب مرة واحدة في اليوم.
+export class VisitCounter extends DurableObject {
+  async fetch(request) {
+    const day = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+    let s = (await this.ctx.storage.get("s")) || { total: 0, day, today: 0 };
+    if (s.day !== day) s = { ...s, day, today: 0 };
+    if (request.method === "POST") {
+      s.total++;
+      s.today++;
+      await this.ctx.storage.put("s", s);
+    }
+    return Response.json({ total: s.total, today: s.today });
+  }
+}
+
+const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS" };
+async function visits(request, env, path) {
+  if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
+  if (!env.VISITS) return json({ total: 0, today: 0 }, 200, CORS);
+  const stub = env.VISITS.get(env.VISITS.idFromName("site"));
+  const ua = request.headers.get("user-agent") || "";
+  const bot = /bot|crawl|spider|slurp|preview|monitor|curl|wget|python|headless/i.test(ua);
+  const add = path === "/api/visit" && request.method === "POST" && !bot;
+  const res = await stub.fetch("https://counter/", { method: add ? "POST" : "GET" });
+  return json(await res.json(), 200, CORS);
 }
