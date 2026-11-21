@@ -78,6 +78,19 @@ nav.links a:hover,nav.links a.on{color:var(--ink);background:var(--sunk)}
   color:var(--tile-ink);background:var(--tile);border-radius:12px;box-shadow:0 5px 0 var(--tile-edge),0 10px 18px rgba(40,30,80,.12);
   animation:drop .6s cubic-bezier(.3,1.5,.5,1) both}
 .ltile.hl{background:var(--teal);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--teal) 60%,#000),0 10px 18px rgba(20,120,130,.3)}
+/* حروف علِّم تدور عموديًا كبكرة ثم تستقر على الكلمة */
+.ltile.reel{overflow:hidden;position:relative;display:block;cursor:pointer}
+.reel-col{display:flex;flex-direction:column;height:calc(100% * var(--n));transform:translateY(var(--end));
+  animation:reelspin var(--dur) cubic-bezier(.18,.7,.25,1) var(--delay) both}
+.reel-col b{flex:1;display:grid;place-items:center;font-weight:800}
+.reel::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 28%,transparent 72%,rgba(0,0,0,.12))}
+@keyframes reelspin{
+  0%{transform:translateY(0);filter:blur(0)}
+  12%{filter:blur(1.5px)}
+  80%{filter:blur(.6px)}
+  90%{transform:translateY(calc(var(--end) - 100% / var(--n) * .18));filter:blur(0)}
+  100%{transform:translateY(var(--end))}}
 .ltile:nth-child(2){animation-delay:.1s}.ltile:nth-child(3){animation-delay:.2s}.ltile:nth-child(4){animation-delay:.3s}
 @keyframes drop{from{transform:translateY(-24px) scale(.8)}to{transform:none}}
 
@@ -395,13 +408,23 @@ function gradeTiles(){
     </a>`).join("")}</div></div>`).join("")+'</div>';
 }
 
+const REEL_POOL=["أ","ب","ت","ث","ج","ح","خ","د","ر","س","ش","ص","ط","ف","ق","ك","ن","هـ","و","ي"];
+function reelTile(final,i,hl){
+  const n=12+i*4; /* كل حرف يدور مدة أطول قليلًا من الذي قبله */
+  const letters=[];for(let k=0;k<n;k++)letters.push(REEL_POOL[(k*7+i*5)%REEL_POOL.length]);
+  letters.push(final);
+  const N=letters.length;
+  return `<span class="ltile reel${hl?" hl":""}" aria-hidden="true"><span class="reel-col" style="--n:${N};--end:calc(-100% * ${N-1} / ${N});--dur:${1.6+i*.45}s;--delay:${.25+i*.12}s">${letters.map(l=>`<b>${l}</b>`).join("")}</span></span>`;
+}
+function spinLogo(){document.querySelectorAll(".reel-col").forEach(c=>{c.style.animation="none";void c.offsetWidth;c.style.animation=""})}
+
 function home(){
   return `
   <section class="hero">
     <div class="wrap">
       <div class="logo-tiles" aria-label="منصة علِّم">
         <span class="plank">منصة</span>
-        <span class="ltile">ع</span><span class="ltile hl">لِّ</span><span class="ltile">م</span>
+        ${reelTile("ع",0)}${reelTile("لِّ",1,true)}${reelTile("م",2)}
       </div>
       <div class="chest-stage" aria-hidden="true">
         <span class="pop p1">${svg(ICONS.book)}</span>
@@ -704,6 +727,7 @@ function render(){
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});
   app.querySelectorAll("[data-ntab]").forEach(b=>b.onclick=()=>{noorTab=b.dataset.ntab;render()});
   initVisits();
+  const lg=app.querySelector(".logo-tiles"); if(lg) lg.onclick=spinLogo;
   if(SCROLL[h]){const el=document.getElementById(SCROLL[h]);el&&el.scrollIntoView({block:"start"});}
 }
 window.addEventListener("hashchange",()=>{render();const h=location.hash.slice(1);if(!SCROLL[h])window.scrollTo(0,0)});
