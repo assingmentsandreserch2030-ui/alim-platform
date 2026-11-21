@@ -217,6 +217,18 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
 .grade:hover .num{background:var(--maroon);color:#fff;box-shadow:0 5px 0 var(--maroon-edge)}
 .subject:hover{border-color:var(--maroon)}
 .subject .chip{background:var(--surface)}
+/* القاعدة النورانية */
+nav.links a.noor-link{color:#2E8B57}
+.noor-btn{border-color:#BFE3CF;background:#E6F5EC;color:#1F6B43}
+.noor-btn:hover{border-color:#2E8B57}
+.noor-hero{background:linear-gradient(135deg,#E6F5EC,var(--maroon-soft));border:1px solid #BFE3CF;border-radius:24px;padding:26px;display:flex;gap:20px;align-items:center;margin:18px 0 26px}
+.noor-hero .sic{width:76px;height:76px;flex-shrink:0;border-radius:18px;display:grid;place-items:center;color:#fff;background:#2E8B57}
+.noor-hero h1{font-size:clamp(28px,4vw,42px);font-weight:800}
+.noor-hero p{margin:4px 0 0;color:var(--muted)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .noor-btn,:root:not([data-theme="light"]) .noor-hero{background:#16342A;border-color:#24543F;color:#9FE0BC}}
+:root[data-theme="dark"] .noor-btn,:root[data-theme="dark"] .noor-hero{background:#16342A;border-color:#24543F;color:#9FE0BC}
+@media (max-width:560px){.noor-hero{flex-direction:column;text-align:center;padding:20px}}
+
 /* مربع عدد الزوار */
 .counters{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1100px;margin:22px auto 0}
 @media (max-width:980px){.counters{grid-template-columns:1fr 1fr}.counters .visits:first-child{grid-column:1/-1}}
@@ -263,6 +275,7 @@ aside.card a.active{background:var(--teal-soft);color:var(--teal)}
       <a href="#home" data-nav="home">الرئيسية</a>
       <a href="#grades" data-nav="grades">الصفوف الدراسية</a>
       <a href="#subjects" data-nav="subjects">المواد</a>
+      <a href="#nooraniya" data-nav="nooraniya" class="noor-link">القاعدة النورانية</a>
       <a href="#students" data-nav="students">للطلاب</a>
       <a href="#teachers" data-nav="teachers">للمعلمين</a>
       <a href="#how" data-nav="how">كيف تعمل المنصة</a>
@@ -309,6 +322,7 @@ const ICONS={
   ai:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M10 10h4v4h-4z"/>',
   econ:'<path d="M4 20h16"/><path d="m4 15 5-5 4 3 7-7"/><path d="M15 6h5v5"/>',
   data:'<path d="M5 20V10M10 20V4M15 20v-7M20 20v-11"/>',
+  noor:'<path d="M12 6c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-13c-3-.5-6 0-8 1.5z"/><path d="M12 6v13"/><path d="M12 2.5l.5 1 1 .2-.7.7.2 1-1-.5-1 .5.2-1-.7-.7 1-.2z"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z"/>',
   cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/>',
   pencil:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="m14 6 3 3"/>'
@@ -400,6 +414,7 @@ function home(){
       <div class="row">
         <a class="cta lg" href="#grades">ابدأ المراجعة مجانًا</a>
         <a class="btn2" href="#teachers">أنا معلم</a>
+        <a class="btn2 noor-btn" href="#nooraniya">${svg(ICONS.noor,20)}القاعدة النورانية</a>
       </div>
       <div class="stats">
         <div class="stat"><b>12</b><span>صفًا<br>دراسية</span></div>
@@ -529,6 +544,30 @@ function initVisits(){
     .catch(()=>{box.hidden=true});
 }
 
+let noorTab="book";
+function nooraniya(){
+  loadUploads(0);
+  const all=(UPLOADS[0].items||[]).filter(i=>i.subject==="nooraniya"&&(role==="teacher"||i.audience!=="teacher"));
+  const up=all.filter(i=>i.type===noorTab);
+  const ph=[["book","كتاب القاعدة النورانية","الكتاب كاملًا بصيغة PDF"],["book","دروس القاعدة النورانية","الدروس مرتبة من الحروف المفردة إلى التلاوة"],
+            ["work","تدريبات القراءة","أوراق تدريب على كل درس"],["review","مراجعة الدروس","أسئلة وتمارين لمراجعة ما تعلّمه الطالب"]].filter(x=>x[0]===noorTab);
+  const loading=UPLOADS[0].loading;
+  return `
+  <div class="wrap">
+    <div class="crumbs"><a href="#home">الرئيسية</a><span>/</span><span>القاعدة النورانية</span></div>
+    <div class="noor-hero"><span class="sic">${svg(ICONS.noor,38)}</span><div>
+      <h1>القاعدة النورانية</h1>
+      <p>تعليم قراءة القرآن الكريم بالطريقة الصحيحة، من الحروف الهجائية إلى التلاوة. مناسبة للصفوف الأولى ولكل من يبدأ القراءة.</p>
+    </div></div>
+    <div class="tabs" role="tablist">
+      <button id="ntab-book" role="tab" data-ntab="book" aria-selected="${noorTab==="book"}">الكتاب والدروس</button>
+      <button id="ntab-work" role="tab" data-ntab="work" aria-selected="${noorTab==="work"}">تدريبات</button>
+      <button id="ntab-review" role="tab" data-ntab="review" aria-selected="${noorTab==="review"}">مراجعات</button>
+    </div>
+    <div class="slots" style="padding-bottom:40px">${up.length?up.map(realSlot).join(""):loading?'<p style="color:var(--muted)">جارٍ التحميل…</p>':ph.map(x=>slot(x[1],x[2],"PDF")).join("")}</div>
+  </div>`;
+}
+
 function portal(r){
   const isT=r==="teachers";
   return `
@@ -581,10 +620,10 @@ const escH=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"
 function loadUploads(n){
   if(UPLOADS[n]) return;
   UPLOADS[n]={loading:true,items:[]};
-  fetch("/api/items?grade="+n).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
-    UPLOADS[n]={items:d.items||[]};
-    if(new RegExp("^#grade-"+n+"-").test(location.hash)) render();
-  }).catch(()=>{UPLOADS[n]={items:[],failed:true}});
+  const again=()=>{if(n===0?location.hash==="#nooraniya":new RegExp("^#grade-"+n+"-").test(location.hash)) render()};
+  fetch(API_BASE+"/api/items?grade="+n).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    UPLOADS[n]={items:d.items||[]};again();
+  }).catch(()=>{UPLOADS[n]={items:[],failed:true};again()});
 }
 function realSlot(i){
   const url="/files/"+i.id+"/"+encodeURIComponent(i.fileName);
@@ -653,7 +692,8 @@ function render(){
   const h=(location.hash||"#home").slice(1);
   const app=document.getElementById("app");
   let m;
-  if(h==="students"||h==="teachers"){ role=h==="teachers"?"teacher":"student"; try{localStorage.setItem("alim-role",role)}catch(e){} app.innerHTML=portal(h); }
+  if(h==="nooraniya") app.innerHTML=nooraniya();
+  else if(h==="students"||h==="teachers"){ role=h==="teachers"?"teacher":"student"; try{localStorage.setItem("alim-role",role)}catch(e){} app.innerHTML=portal(h); }
   else if((m=h.match(/^grade-([1-9]|1[0-2])-([a-z]+)$/))) app.innerHTML=subject(+m[1],m[2]);
   else if((m=h.match(/^grade-([1-9]|1[0-2])$/))) app.innerHTML=grade(+m[1]);
   else app.innerHTML=home();
@@ -662,6 +702,7 @@ function render(){
   app.querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{term=+b.dataset.term;render()});
   app.querySelectorAll("[data-track]").forEach(b=>b.onclick=()=>{track=b.dataset.track;render()});
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render()});
+  app.querySelectorAll("[data-ntab]").forEach(b=>b.onclick=()=>{noorTab=b.dataset.ntab;render()});
   initVisits();
   if(SCROLL[h]){const el=document.getElementById(SCROLL[h]);el&&el.scrollIntoView({block:"start"});}
 }

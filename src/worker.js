@@ -74,7 +74,8 @@ function validateMeta(input, partial = false) {
   if (!partial || has("desc")) out.desc = clean(input.desc, 300);
   if (!partial || has("grade")) {
     out.grade = Number(input.grade);
-    if (!Number.isInteger(out.grade) || out.grade < 1 || out.grade > 12) return { error: "اختر الصف" };
+    // الصف 0 مخصص للقاعدة النورانية
+    if (!Number.isInteger(out.grade) || out.grade < 0 || out.grade > 12) return { error: "اختر الصف" };
   }
   if (!partial || has("subject")) {
     out.subject = clean(input.subject, 30);
