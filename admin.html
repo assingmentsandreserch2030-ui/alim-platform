@@ -56,6 +56,7 @@ header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--surfac
 .login h1{font-size:30px;font-weight:800}
 .login p{color:var(--muted);margin:4px 0 18px}
 .login form{display:grid;gap:12px;text-align:start}
+.linkbtn{border:0;background:none;color:var(--teal);font-weight:700;cursor:pointer;padding:4px;font-size:14px;justify-self:center}
 
 label.f{display:grid;gap:4px;font-weight:600;font-size:14px;min-width:0}
 label.f small{font-weight:400;color:var(--muted)}
@@ -138,6 +139,16 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 16px}
       <label class="f">كلمة المرور<input id="password" type="password" autocomplete="current-password" required></label>
       <button class="btn" type="submit" id="login-btn">دخول</button>
       <div id="login-msg" class="msg bad" hidden></div>
+      <button class="linkbtn" type="button" id="to-setup">أول مرة، أو نسيت كلمة المرور؟</button>
+    </form>
+    <form id="setup-form" hidden>
+      <p style="margin:0">اكتب رمز الإعداد الذي أرسلته لك، ثم اختر كلمة المرور التي تريدها.</p>
+      <label class="f">رمز الإعداد<input id="s-code" type="text" autocomplete="off" dir="ltr" placeholder="XXXX-XXXX-XXXX-XXXX" required></label>
+      <label class="f">كلمة المرور الجديدة<small>6 أحرف أو أرقام على الأقل</small><input id="s-pass" type="password" autocomplete="new-password" required minlength="6"></label>
+      <label class="f">أعد كتابة كلمة المرور<input id="s-pass2" type="password" autocomplete="new-password" required></label>
+      <button class="btn" type="submit" id="setup-btn">حفظ كلمة المرور والدخول</button>
+      <div id="setup-msg" class="msg bad" hidden></div>
+      <button class="linkbtn" type="button" id="to-login">رجوع إلى الدخول</button>
     </form>
   </div>
 </main>
@@ -235,8 +246,8 @@ let items=[], editing=null, files=[];
 async function api(path,opt={}){
   const res=await fetch(path,{...opt,headers:{...(opt.headers||{}),...(token?{authorization:"Bearer "+token}:{})}});
   let data={};try{data=await res.json()}catch(e){}
-  if(res.status===401&&path!=="/api/login"){logout();throw new Error(data.error||"انتهت الجلسة")}
-  if(!res.ok) throw new Error((data.error||"تعذّر الاتصال بالخادم")+(data.seen?" · "+data.seen:""));
+  if(res.status===401&&path!=="/api/login"&&path!=="/api/setup"){logout();throw new Error(data.error||"انتهت الجلسة")}
+  if(!res.ok){const er=new Error(data.error||"تعذّر الاتصال بالخادم");er.data=data;throw er}
   return data;
 }
 function show(view){$("#login-view").hidden=view!=="login";$("#admin-view").hidden=view!=="admin";$("#logout").hidden=view!=="admin"}
@@ -250,7 +261,23 @@ $("#login-form").onsubmit=async e=>{
     const r=await api("/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:$("#password").value})});
     token=r.token;try{localStorage.setItem("alim-admin",JSON.stringify(r))}catch(e){}
     $("#password").value="";show("admin");load();
-  }catch(err){$("#login-msg").textContent=err.message;$("#login-msg").hidden=false}
+  }catch(err){
+    if(err.data&&err.data.needSetup){setupMode(true);$("#setup-msg").textContent="لم تُختر كلمة المرور بعد. اكتب رمز الإعداد واختر كلمة المرور.";$("#setup-msg").className="msg ok";$("#setup-msg").hidden=false}
+    else{$("#login-msg").textContent=err.message;$("#login-msg").hidden=false}
+  }
+  btn.disabled=false;
+};
+function setupMode(on){$("#login-form").hidden=on;$("#setup-form").hidden=!on;(on?$("#s-code"):$("#password")).focus()}
+$("#to-setup").onclick=()=>setupMode(true);$("#to-login").onclick=()=>setupMode(false);
+$("#setup-form").onsubmit=async e=>{
+  e.preventDefault();const m=$("#setup-msg");m.hidden=true;m.className="msg bad";
+  if($("#s-pass").value!==$("#s-pass2").value){m.textContent="كلمتا المرور غير متطابقتين";m.hidden=false;return}
+  const btn=$("#setup-btn");btn.disabled=true;
+  try{
+    const r=await api("/api/setup",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code:$("#s-code").value,password:$("#s-pass").value})});
+    token=r.token;try{localStorage.setItem("alim-admin",JSON.stringify(r))}catch(e){}
+    ["#s-code","#s-pass","#s-pass2"].forEach(s=>$(s).value="");setupMode(false);show("admin");load();
+  }catch(err){m.textContent=err.message;m.hidden=false}
   btn.disabled=false;
 };
 

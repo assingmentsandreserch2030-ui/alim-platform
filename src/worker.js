@@ -20,6 +20,7 @@ export default {
     try {
       if (path.startsWith("/files/")) return serveFile(request, env, path);
       if (path === "/api/login" && request.method === "POST") return login(request, env);
+      if (path === "/api/setup" && request.method === "POST") return setup(request, env);
       if (path === "/api/items" && request.method === "GET") return listItems(env, url);
       if (path === "/api/items" && request.method === "POST") return guard(request, env, () => createItem(request, env));
       const m = path.match(/^\/api\/items\/([a-z0-9]+)$/);
@@ -117,46 +118,83 @@ function normPass(v) {
   return s.replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x6f0));
 }
 
-// يقرأ كلمة المرور حتى لو كُتب اسم المتغير بحروف صغيرة أو بمسافة زائدة
-function adminPassword(env) {
+// يقرأ كلمة المرور من متغير سري إن وُجد، حتى لو كُتب اسمه بحروف صغيرة أو بمسافة زائدة
+function envPassword(env) {
   if (typeof env.ADMIN_PASSWORD === "string" && env.ADMIN_PASSWORD.trim()) return env.ADMIN_PASSWORD;
   for (const [k, v] of Object.entries(env)) {
-    if (typeof v === "string" && v.trim() && /PASS|PASSWORD|كلمة/i.test(k.replace(/[^A-Za-z\u0600-\u06FF]/g, ""))) return v;
+    if (typeof v === "string" && v.trim() && /PASS/i.test(k)) return v;
   }
   return "";
 }
-function missingPassword(env) {
-  const names = Object.entries(env).filter(([, v]) => typeof v === "string").map(([k]) => k);
-  return json({
-    error: "لم تُضبط كلمة مرور الإدارة بعد في إعدادات Cloudflare (ADMIN_PASSWORD)",
-    seen: names.length ? "المتغيرات التي يراها الموقع: " + names.join("، ") : "الموقع لا يرى أي متغير",
-  }, 503);
+
+// كلمة المرور التي اختارها المدير من صفحة الإعداد تُحفظ في KV كبصمة PBKDF2 فقط
+const AUTH_KEY = "admin:auth";
+const b64 = (u8) => btoa(String.fromCharCode(...u8));
+async function pbkdf2(pass, saltB64, iter) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
+  const salt = Uint8Array.from(atob(saltB64), (c) => c.charCodeAt(0));
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, key, 256);
+  return b64(new Uint8Array(bits));
+}
+async function sha256hex(s) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// يعيد مفتاح توقيع الجلسات ودالة التحقق من كلمة المرور، أو null إن لم تُضبط بعد
+async function getAuth(env) {
+  const ep = envPassword(env);
+  if (ep) return { key: "env:" + ep, check: async (p) => safeEqual(await hmac("alim-check", normPass(p)), await hmac("alim-check", normPass(ep))) };
+  const rec = await env.FILES.get(AUTH_KEY, { type: "json", cacheTtl: 60 });
+  if (rec && rec.hash) return { key: "kv:" + rec.hash, check: async (p) => safeEqual(await pbkdf2(normPass(p), rec.salt, rec.iter), rec.hash) };
+  return null;
+}
+
+async function issueToken(key) {
+  const exp = Date.now() + TOKEN_HOURS * 3600 * 1000;
+  const payload = String(exp);
+  return { token: payload + "." + (await hmac(key, payload)), exp };
 }
 
 async function login(request, env) {
-  const ADMIN = adminPassword(env);
-  if (!ADMIN) return missingPassword(env);
+  const auth = await getAuth(env);
+  if (!auth) return json({ error: "لم تُختر كلمة مرور الإدارة بعد. اختر «تعيين كلمة المرور» واكتب رمز الإعداد.", needSetup: true }, 503);
   let body = {};
   try { body = await request.json(); } catch {}
-  const pass = normPass(body.password);
-  // مقارنة بصمتين متساويتي الطول حتى لا يُستدل على كلمة المرور من زمن الاستجابة
-  const ok = safeEqual(await hmac("alim-check", pass), await hmac("alim-check", normPass(ADMIN)));
-  if (!ok) {
+  if (!(await auth.check(body.password))) {
     await new Promise((r) => setTimeout(r, 800));
     return json({ error: "كلمة المرور غير صحيحة" }, 401);
   }
-  const exp = Date.now() + TOKEN_HOURS * 3600 * 1000;
-  const payload = String(exp);
-  return json({ token: payload + "." + (await hmac(ADMIN, payload)), exp });
+  return json(await issueToken(auth.key));
+}
+
+// تعيين كلمة المرور أول مرة، أو إعادة تعيينها عند نسيانها، برمز الإعداد
+async function setup(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const code = normPass(body.code).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const okCode = env.SETUP_CODE_HASH && code && safeEqual(await sha256hex(code), String(env.SETUP_CODE_HASH));
+  if (!okCode) {
+    await new Promise((r) => setTimeout(r, 1200));
+    return json({ error: "رمز الإعداد غير صحيح" }, 401);
+  }
+  if (envPassword(env)) return json({ error: "يوجد متغير سري لكلمة المرور في Cloudflare، وهو المعتمد. ادخل به أو احذفه من الإعدادات." }, 409);
+  const pass = normPass(body.password);
+  if (pass.length < 6) return json({ error: "اختر كلمة مرور من 6 أحرف أو أرقام على الأقل" }, 400);
+  const salt = b64(crypto.getRandomValues(new Uint8Array(16)));
+  const iter = 100000;
+  const hash = await pbkdf2(pass, salt, iter);
+  await env.FILES.put(AUTH_KEY, JSON.stringify({ salt, iter, hash, set: Date.now() }));
+  return json(await issueToken("kv:" + hash));
 }
 
 async function guard(request, env, fn) {
-  const ADMIN = adminPassword(env);
-  if (!ADMIN) return missingPassword(env);
-  const auth = request.headers.get("authorization") || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  const auth = await getAuth(env);
+  if (!auth) return json({ error: "لم تُختر كلمة مرور الإدارة بعد", needSetup: true }, 503);
+  const h = request.headers.get("authorization") || "";
+  const token = h.startsWith("Bearer ") ? h.slice(7) : "";
   const [payload, sig] = token.split(".");
-  const valid = payload && sig && Number(payload) > Date.now() && safeEqual(sig, await hmac(ADMIN, payload));
+  const valid = payload && sig && Number(payload) > Date.now() && safeEqual(sig, await hmac(auth.key, payload));
   if (!valid) return json({ error: "انتهت الجلسة، سجّل الدخول من جديد" }, 401);
   return fn();
 }

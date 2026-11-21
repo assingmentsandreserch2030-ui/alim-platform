@@ -14,7 +14,9 @@
   "kv_namespaces": [
     { "binding": "FILES", "id": "64b6848699ad444380aad00f2ef844d7" }
   ],
-  // كلمة مرور الإدارة لا تُكتب هنا: تُضاف من لوحة Cloudflare كمتغير سري باسم ADMIN_PASSWORD
+  // بصمة رمز الإعداد (وليست الرمز نفسه). بالرمز يختار المدير كلمة المرور من صفحة /admin أو يعيد تعيينها
+  "vars": { "SETUP_CODE_HASH": "043b43703ee15ce60cf1ade30eea264062a3eedfb459804eac3df5da5adbd26a" },
+  // اختياري: يمكن أيضًا وضع كلمة المرور كمتغير سري باسم ADMIN_PASSWORD من لوحة Cloudflare
   "keep_vars": true,
   "observability": { "enabled": true }
 }
