@@ -193,6 +193,13 @@ footer .wrap{padding-block:26px;display:flex;justify-content:space-between;gap:1
 .slot p{margin:0;color:var(--muted);font-size:14px}
 .slot .ph{display:inline-block;font-size:12px;margin-top:4px;color:var(--plank-dark);font-weight:600}
 .slot.teacher-only{border-style:dashed;border-color:var(--violet)}
+.slot>div{flex:1;min-width:0}
+.slot.real .file{background:var(--maroon-soft);color:var(--maroon)}
+.slot .dl{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.slot .dl a{text-decoration:none;font-weight:700;font-size:14px;padding:7px 14px;border-radius:10px;border:2px solid var(--line);white-space:nowrap}
+.slot .dl a.open{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.slot .dl a:hover{border-color:var(--teal)}
+@media (max-width:560px){.slot{flex-wrap:wrap}.slot .dl{width:100%}}
 .slot .who{font-size:12px;font-weight:700;color:var(--violet)}
 aside.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 84px)}
 aside.card h3{font-size:18px;margin-bottom:8px}
@@ -458,13 +465,38 @@ function slot(title,desc,type,teacher){
   </div>`;
 }
 
+/* الملفات المرفوعة من صفحة الإدارة (/admin). إن لم يتوفر الخادم تبقى الأماكن المخصصة كما هي */
+const UPLOADS={};
+const escH=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function loadUploads(n){
+  if(UPLOADS[n]) return;
+  UPLOADS[n]={loading:true,items:[]};
+  fetch("/api/items?grade="+n).then(r=>r.ok?r.json():Promise.reject()).then(d=>{
+    UPLOADS[n]={items:d.items||[]};
+    if(new RegExp("^#grade-"+n+"-").test(location.hash)) render();
+  }).catch(()=>{UPLOADS[n]={items:[],failed:true}});
+}
+function realSlot(i){
+  const url="/files/"+i.id+"/"+encodeURIComponent(i.fileName);
+  const teacher=i.audience==="teacher";
+  return `<div class="slot real ${teacher?"teacher-only":""}">
+    <span class="file">${escH(i.label||"PDF")}</span>
+    <div>${teacher?'<div class="who">للمعلمين فقط</div>':""}<h3>${escH(i.title)}</h3>${i.desc?`<p>${escH(i.desc)}</p>`:""}</div>
+    <span class="dl"><a class="open" href="${url}" target="_blank" rel="noopener">عرض</a><a href="${url}?download">تحميل</a></span>
+  </div>`;
+}
+
 function subject(n,k){
   const g=GRADES[n-1], s=[...subjectsFor(n),...selfFor(n)].find(x=>x.k===k)||(n>=11&&ALL_SUBJECTS[k]&&(()=>{const t=TRACKS.find(t=>[...COMMON_SEC,...t.keys].includes(k));if(t){track=t.k;return ALL_SUBJECTS[k]}})());
   if(!s) return grade(n);
   const T=term===1?"الأول":"الثاني";
   const isT=role==="teacher";
   let slots="";
-  if(tab==="book"){
+  loadUploads(n);
+  const up=(UPLOADS[n].items||[]).filter(i=>i.subject===s.k&&i.term===term&&i.type===tab&&(isT||i.audience!=="teacher"));
+  if(up.length){
+    slots=up.map(realSlot).join("");
+  }else if(tab==="book"){
     slots=slot(`كتاب الطالب: الفصل ${T}`,`${s.ar} · ${g.name}`,"PDF")+
           slot(`كتاب النشاط: الفصل ${T}`,"تمارين وأنشطة الكتاب","PDF")+
           (isT?slot(`دليل المعلم: الفصل ${T}`,"خطط الدروس والتوجيهات","PDF",true):"");
@@ -486,7 +518,7 @@ function subject(n,k){
       <div><h1>${s.ar}</h1><p>${g.name} ${STAGE(g.n)} · ${isT?"عرض المعلم":"عرض الطالب"}</p></div></div>
     <div class="side-grid">
       <div>
-        <div class="notice">${svg('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>',20)}<span>هذه أماكن مخصصة للملفات. عند رفع الكتب والمراجعات ستظهر هنا جاهزة للعرض والتحميل.</span></div>
+        <div class="notice">${svg('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>',20)}<span>${up.length?"اضغط «عرض» لفتح الملف في المتصفح، أو «تحميل» لحفظه على جهازك.":"هذه أماكن مخصصة للملفات. عند رفع الكتب والمراجعات ستظهر هنا جاهزة للعرض والتحميل."}</span></div>
         <div class="term-pick" role="group" aria-label="الفصل الدراسي">
           <button id="term-1" type="button" data-term="1" aria-pressed="${term===1}">الفصل الأول</button>
           <button id="term-2" type="button" data-term="2" aria-pressed="${term===2}">الفصل الثاني</button>

@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>إدارة منصة علِّم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F5F3FA; --grid:rgba(60,50,110,.06); --surface:#FFFFFF; --sunk:#ECE9F4; --ink:#1E1A2E; --muted:#625C78; --line:#DEDAEA;
+  --teal:#159AA6; --teal-soft:#DDF2F3; --navy:#243463; --navy-ink:#FFFFFF; --violet:#7F6CE0; --violet-soft:#EAE6FB;
+  --maroon-soft:#F6E3E9; --maroon-line:#E9C3CF; --maroon:#8A1538; --maroon-tile:#EBC6D2; --maroon-edge:#C98EA2;
+  --ok:#1F8A4C; --ok-soft:#DDF3E6; --bad:#B42318; --bad-soft:#FDE6E3;
+  --f-display:"Baloo Bhaijaan 2","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121D; --grid:rgba(200,190,255,.05); --surface:#1E1B2B; --sunk:#262236; --ink:#F1EEFA; --muted:#ABA5C2; --line:#332E47;
+  --teal:#4CC6D0; --teal-soft:#16343A; --navy:#9FB3F2; --navy-ink:#14121D; --violet:#A796F2; --violet-soft:#2B2547;
+  --maroon-soft:#3A1E28; --maroon-line:#55303D; --maroon:#E07A9A; --maroon-tile:#5A2C3C; --maroon-edge:#2A121B;
+  --ok:#5CCB8A; --ok-soft:#173327; --bad:#F2877C; --bad-soft:#3A1B19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14121D; --grid:rgba(200,190,255,.05); --surface:#1E1B2B; --sunk:#262236; --ink:#F1EEFA; --muted:#ABA5C2; --line:#332E47;
+  --teal:#4CC6D0; --teal-soft:#16343A; --navy:#9FB3F2; --navy-ink:#14121D; --violet:#A796F2; --violet-soft:#2B2547;
+  --maroon-soft:#3A1E28; --maroon-line:#55303D; --maroon:#E07A9A; --maroon-tile:#5A2C3C; --maroon-edge:#2A121B;
+  --ok:#5CCB8A; --ok-soft:#173327; --bad:#F2877C; --bad-soft:#3A1B19; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;margin:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.25;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:8px}
+[hidden]{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px}
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:14px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.gem{width:40px;height:40px;border-radius:12px;background:var(--violet);display:grid;place-items:center;color:#fff}
+.brand b{font-family:var(--f-display);font-size:24px;font-weight:800;color:var(--navy);line-height:1}
+.brand .tag{font-weight:700;color:var(--maroon);background:var(--maroon-soft);border:1px solid var(--maroon-line);padding:2px 10px;border-radius:999px;font-size:14px}
+.bar .sp{flex:1}
+.link{color:var(--teal);font-weight:700;text-decoration:none;font-size:15px}
+.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:var(--navy);color:var(--navy-ink);font-weight:700;padding:11px 20px;border-radius:12px;cursor:pointer;font-size:15px}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.ghost{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+.btn.ghost:hover{border-color:var(--teal);filter:none}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.sm{padding:6px 12px;font-size:14px;border-radius:10px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px}
+.login{max-width:420px;margin:70px auto;text-align:center}
+.login .gem{width:64px;height:64px;border-radius:18px;margin:0 auto 14px}
+.login h1{font-size:30px;font-weight:800}
+.login p{color:var(--muted);margin:4px 0 18px}
+.login form{display:grid;gap:12px;text-align:start}
+
+label.f{display:grid;gap:4px;font-weight:600;font-size:14px;min-width:0}
+label.f small{font-weight:400;color:var(--muted)}
+input[type=text],input[type=password],input[type=search],select,textarea{width:100%;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;font-size:15px}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);outline:none}
+textarea{resize:vertical;min-height:44px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid .wide{grid-column:span 2}
+.grid .full{grid-column:1/-1}
+@media (max-width:760px){.grid{grid-template-columns:1fr 1fr}.grid .wide{grid-column:1/-1}}
+@media (max-width:420px){.grid{grid-template-columns:1fr}}
+
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0}
+.seg span{display:block;border:2px solid var(--line);background:var(--surface);border-radius:11px;padding:6px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.seg input:checked+span{border-color:var(--navy);background:var(--navy);color:var(--navy-ink)}
+.seg input:focus-visible+span{outline:3px solid var(--teal);outline-offset:2px}
+
+.drop{display:block;border:2px dashed var(--maroon-edge);background:var(--maroon-soft);border-radius:16px;padding:22px;text-align:center;cursor:pointer;transition:background .15s}
+.drop.over{background:var(--maroon-tile)}
+.drop b{color:var(--maroon);font-size:17px}
+.drop p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.drop input{display:none}
+.picked{display:grid;gap:6px;margin-top:10px;text-align:start}
+.picked div{display:flex;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--maroon-line);border-radius:10px;padding:6px 12px;font-size:14px}
+.picked div span:last-child{color:var(--muted);white-space:nowrap;direction:ltr}
+
+.sec-t{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:30px 0 14px}
+.sec-t h2{font-size:24px;font-weight:800}
+.sec-t h2 span{font-family:var(--f-body);font-size:15px;color:var(--muted);font-weight:600}
+.form-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.form-head h2{font-size:22px;font-weight:800}
+.form-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.progress{flex:1;min-width:160px;height:10px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--teal);transition:width .2s}
+.msg{border-radius:12px;padding:10px 14px;font-weight:600;font-size:14px;margin-top:12px}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.editing{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;gap:10px;margin-bottom:14px}
+@media (max-width:760px){.filters{grid-template-columns:1fr 1fr}}
+.items{display:grid;gap:10px}
+.item{display:flex;gap:14px;align-items:center;background:var(--maroon-soft);border:1px solid var(--maroon-line);border-radius:14px;padding:12px 14px}
+.item .file{width:48px;height:56px;flex-shrink:0;border-radius:10px;background:var(--surface);display:grid;place-items:center;font-weight:800;font-size:12px;color:var(--maroon);direction:ltr}
+.item .body{flex:1;min-width:0}
+.item h3{font-size:17px;overflow-wrap:anywhere}
+.item .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chip{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--surface);color:var(--muted)}
+.chip.t{color:var(--violet)}
+.item .acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:620px){.item{flex-wrap:wrap}.item .acts{width:100%;justify-content:flex-start}}
+.empty{text-align:center;color:var(--muted);padding:30px;border:2px dashed var(--line);border-radius:16px}
+.help{background:var(--violet-soft);border-radius:14px;padding:12px 16px;font-size:14px;margin-top:16px}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 16px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/">
+      <span class="gem"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 21 8 9l4-6 4 6z"/></svg></span>
+      <b>علِّم</b><span class="tag">لوحة الإدارة</span>
+    </a>
+    <span class="sp"></span>
+    <a class="link" href="/" target="_blank" rel="noopener">عرض الموقع</a>
+    <button id="logout" class="btn ghost sm" type="button" hidden>خروج</button>
+  </div>
+</header>
+
+<!-- تسجيل الدخول -->
+<main id="login-view" class="wrap" hidden>
+  <div class="card login">
+    <div class="gem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <h1>دخول الإدارة</h1>
+    <p>اكتب كلمة المرور لرفع الكتب والمراجعات.</p>
+    <form id="login-form">
+      <label class="f">كلمة المرور<input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit" id="login-btn">دخول</button>
+      <div id="login-msg" class="msg bad" hidden></div>
+    </form>
+  </div>
+</main>
+
+<!-- لوحة الإدارة -->
+<main id="admin-view" class="wrap" hidden>
+  <div style="height:24px"></div>
+  <form id="up-form" class="card" novalidate>
+    <div class="form-head">
+      <h2 id="form-title">رفع ملف جديد</h2>
+      <button id="cancel-edit" class="btn ghost sm" type="button" hidden>إلغاء التعديل</button>
+    </div>
+    <div class="grid">
+      <label class="f">الصف<select id="f-grade" required></select></label>
+      <label class="f wide">المادة<select id="f-subject" required></select></label>
+      <div class="f"><span style="font-weight:600;font-size:14px">الفصل الدراسي</span>
+        <div class="seg" role="radiogroup" aria-label="الفصل الدراسي">
+          <label><input type="radio" name="term" value="1" checked><span>الأول</span></label>
+          <label><input type="radio" name="term" value="2"><span>الثاني</span></label>
+        </div>
+      </div>
+      <div class="f wide"><span style="font-weight:600;font-size:14px">نوع الملف</span>
+        <div class="seg" role="radiogroup" aria-label="نوع الملف">
+          <label><input type="radio" name="type" value="review" checked><span>مراجعة اختبار</span></label>
+          <label><input type="radio" name="type" value="book"><span>كتاب مدرسي</span></label>
+          <label><input type="radio" name="type" value="work"><span>ورقة عمل</span></label>
+        </div>
+      </div>
+      <div class="f wide"><span style="font-weight:600;font-size:14px">يظهر لـ</span>
+        <div class="seg" role="radiogroup" aria-label="لمن يظهر الملف">
+          <label><input type="radio" name="audience" value="all" checked><span>الطلاب والمعلمين</span></label>
+          <label><input type="radio" name="audience" value="teacher"><span>المعلمين فقط</span></label>
+        </div>
+      </div>
+      <label class="f wide">العنوان<small id="title-hint">مثال: مراجعة اختبار منتصف الفصل الأول</small><input id="f-title" type="text" maxlength="150"></label>
+      <label class="f wide">وصف قصير<small>اختياري</small><input id="f-desc" type="text" maxlength="300"></label>
+      <div class="full">
+        <label class="drop" id="drop">
+          <input id="f-file" type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.zip">
+          <b id="drop-t">اضغط لاختيار الملفات أو اسحبها إلى هنا</b>
+          <p id="drop-p">PDF أو Word أو PowerPoint أو صور. حتى 25 ميغابايت للملف. يمكنك اختيار عدة ملفات معًا.</p>
+          <div class="picked" id="picked"></div>
+        </label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit" id="save-btn">رفع الملفات</button>
+      <div class="progress" id="progress" hidden><i></i></div>
+      <span id="progress-t" style="font-size:14px;color:var(--muted)"></span>
+    </div>
+    <div id="form-msg" class="msg" hidden></div>
+  </form>
+
+  <div class="sec-t"><h2>الملفات المرفوعة <span id="count"></span></h2></div>
+  <div class="filters">
+    <select id="q-grade" aria-label="تصفية بالصف"></select>
+    <select id="q-subject" aria-label="تصفية بالمادة"></select>
+    <select id="q-type" aria-label="تصفية بالنوع">
+      <option value="">كل الأنواع</option><option value="review">مراجعات</option><option value="book">كتب</option><option value="work">أوراق عمل</option>
+    </select>
+    <input id="q-text" type="search" placeholder="ابحث بالعنوان" aria-label="بحث">
+  </div>
+  <div class="items" id="items"></div>
+  <div class="help">بعد الرفع يظهر الملف في الموقع خلال دقيقة تقريبًا، في صفحة الصف والمادة، تحت الفصل والنوع اللذين اخترتهما.</div>
+</main>
+
+<footer>منصة علِّم · لوحة الإدارة</footer>
+
+<script>
+const NAMES=["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر"];
+const SUBJ={islamic:"التربية الإسلامية",arabic:"اللغة العربية",english:"اللغة الإنجليزية",math:"الرياضيات",science:"العلوم",
+  life:"المهارات الحياتية والمهنية",pe:"التربية البدنية",art:"التربية الفنية",social:"الدراسات الاجتماعية",socialq:"الدراسات الاجتماعية / تاريخ قطر",
+  computing:"الحوسبة وتكنولوجيا المعلومات",sciuni:"مقرر العلوم الموحّد",physics:"الفيزياء",chemistry:"الكيمياء",biology:"الأحياء",
+  history:"التاريخ",geography:"الجغرافيا",ai:"الذكاء الاصطناعي",econ:"الاقتصاد والتجارة",data:"علم البيانات"};
+/* نفس ترتيب المواد في الموقع الرئيسي */
+const SEC=[{t:"المواد المشتركة",k:["islamic","arabic","english"]},{t:"المسار العلمي",k:["math","physics","chemistry","biology"]},
+  {t:"المسار التكنولوجي",k:["computing"]},{t:"مسار الآداب والإنسانيات",k:["socialq","history","geography"]},
+  {t:"المسار الموازي",k:["science","social"]},{t:"التعلّم الذاتي",k:["ai","econ","data"]}];
+function subjectGroups(n){
+  if(n<=6) return [{k:["islamic","arabic","english","math","science","life","pe","art"]}];
+  if(n<=9) return [{k:["islamic","arabic","english","math","science","socialq","life","pe","art"]}];
+  if(n===10) return [{k:["islamic","arabic","english","math","sciuni","life"]}];
+  return SEC;
+}
+const TYPE_AR={review:"مراجعة اختبار",book:"كتاب مدرسي",work:"ورقة عمل"};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const size=b=>b>=1048576?(b/1048576).toFixed(1)+" MB":Math.max(1,Math.round(b/1024))+" KB";
+const MAX=25*1024*1024;
+
+let token=null;
+try{const t=JSON.parse(localStorage.getItem("alim-admin")||"null");if(t&&t.exp>Date.now())token=t.token}catch(e){}
+let items=[], editing=null, files=[];
+
+async function api(path,opt={}){
+  const res=await fetch(path,{...opt,headers:{...(opt.headers||{}),...(token?{authorization:"Bearer "+token}:{})}});
+  let data={};try{data=await res.json()}catch(e){}
+  if(res.status===401&&path!=="/api/login"){logout();throw new Error(data.error||"انتهت الجلسة")}
+  if(!res.ok) throw new Error(data.error||"تعذّر الاتصال بالخادم");
+  return data;
+}
+function show(view){$("#login-view").hidden=view!=="login";$("#admin-view").hidden=view!=="admin";$("#logout").hidden=view!=="admin"}
+function logout(){token=null;try{localStorage.removeItem("alim-admin")}catch(e){};show("login");$("#password").focus()}
+$("#logout").onclick=logout;
+
+$("#login-form").onsubmit=async e=>{
+  e.preventDefault();
+  const btn=$("#login-btn");btn.disabled=true;$("#login-msg").hidden=true;
+  try{
+    const r=await api("/api/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:$("#password").value})});
+    token=r.token;try{localStorage.setItem("alim-admin",JSON.stringify(r))}catch(e){}
+    $("#password").value="";show("admin");load();
+  }catch(err){$("#login-msg").textContent=err.message;$("#login-msg").hidden=false}
+  btn.disabled=false;
+};
+
+/* قوائم الصف والمادة */
+function gradeOptions(sel,all){sel.innerHTML=(all?'<option value="">كل الصفوف</option>':"")+NAMES.map((w,i)=>`<option value="${i+1}">الصف ${w}</option>`).join("")}
+function subjectOptions(sel,n,all){
+  const g=n?subjectGroups(+n):[{k:Object.keys(SUBJ)}];
+  const opt=k=>`<option value="${k}">${SUBJ[k]}</option>`;
+  sel.innerHTML=(all?'<option value="">كل المواد</option>':"")+g.map(x=>x.t?`<optgroup label="${x.t}">${x.k.map(opt).join("")}</optgroup>`:x.k.map(opt).join("")).join("");
+}
+gradeOptions($("#f-grade"));gradeOptions($("#q-grade"),true);
+subjectOptions($("#f-subject"),1);subjectOptions($("#q-subject"),"",true);
+$("#f-grade").onchange=()=>{const cur=$("#f-subject").value;subjectOptions($("#f-subject"),$("#f-grade").value);if([...$("#f-subject").options].some(o=>o.value===cur))$("#f-subject").value=cur};
+$("#q-grade").onchange=()=>{subjectOptions($("#q-subject"),$("#q-grade").value,true);renderList()};
+["#q-subject","#q-type"].forEach(s=>$(s).onchange=renderList);$("#q-text").oninput=renderList;
+
+/* اختيار الملفات */
+const drop=$("#drop"), input=$("#f-file");
+function setFiles(list){
+  files=[...list];if(editing)files=files.slice(0,1);
+  $("#picked").innerHTML=files.map(f=>`<div><span>${esc(f.name)}</span><span>${size(f.size)}</span></div>`).join("");
+  $("#title-hint").textContent=files.length>1?"مع عدة ملفات يصبح اسم كل ملف عنوانًا له إن تركت العنوان فارغًا":"مثال: مراجعة اختبار منتصف الفصل الأول";
+  if(files.length===1&&!$("#f-title").value&&!editing)$("#f-title").value=files[0].name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ");
+}
+input.onchange=()=>setFiles(input.files);
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files.length)setFiles(e.dataTransfer.files)});
+
+const radio=n=>document.querySelector(`input[name="${n}"]:checked`).value;
+const setRadio=(n,v)=>{const r=document.querySelector(`input[name="${n}"][value="${v}"]`);if(r)r.checked=true};
+function msg(text,ok){const m=$("#form-msg");m.textContent=text;m.className="msg "+(ok?"ok":"bad");m.hidden=false}
+
+function send(method,url,fd,onProgress){
+  return new Promise((resolve,reject)=>{
+    const x=new XMLHttpRequest();x.open(method,url);x.setRequestHeader("authorization","Bearer "+token);
+    x.upload.onprogress=e=>e.lengthComputable&&onProgress(e.loaded/e.total);
+    x.onload=()=>{let d={};try{d=JSON.parse(x.responseText)}catch(e){}
+      if(x.status===401){logout();reject(new Error(d.error||"انتهت الجلسة"))}
+      else if(x.status>=200&&x.status<300)resolve(d);else reject(new Error(d.error||"تعذّر الرفع"))};
+    x.onerror=()=>reject(new Error("انقطع الاتصال أثناء الرفع"));x.send(fd);
+  });
+}
+
+$("#up-form").onsubmit=async e=>{
+  e.preventDefault();$("#form-msg").hidden=true;
+  const base={grade:$("#f-grade").value,subject:$("#f-subject").value,term:radio("term"),type:radio("type"),audience:radio("audience"),desc:$("#f-desc").value.trim()};
+  const title=$("#f-title").value.trim();
+  if(!editing&&!files.length)return msg("اختر ملفًا واحدًا على الأقل");
+  if(!title&&(editing||files.length===1))return msg("اكتب عنوان الملف"),$("#f-title").focus();
+  const big=files.find(f=>f.size>MAX);if(big)return msg(`الملف «${big.name}» أكبر من 25 ميغابايت`);
+  const btn=$("#save-btn");btn.disabled=true;$("#progress").hidden=false;const bar=$("#progress i");
+  try{
+    if(editing){
+      const fd=new FormData();Object.entries({...base,title}).forEach(([k,v])=>fd.append(k,v));if(files[0])fd.append("file",files[0]);
+      const r=await send("PATCH","/api/items/"+editing,fd,p=>bar.style.width=p*100+"%");
+      items=items.map(i=>i.id===r.item.id?r.item:i);msg("حُفظت التعديلات",true);stopEdit();
+    }else{
+      let done=0;
+      for(const f of files){ /* واحدًا تلو الآخر */
+        $("#progress-t").textContent=files.length>1?`${done+1} من ${files.length}`:"";
+        const fd=new FormData();
+        Object.entries({...base,title:files.length===1?title:(title?title+" · ":"")+f.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ")}).forEach(([k,v])=>fd.append(k,v));
+        fd.append("file",f);
+        const r=await send("POST","/api/items",fd,p=>bar.style.width=((done+p)/files.length)*100+"%");
+        items.unshift(r.item);done++;
+      }
+      msg(done>1?`رُفعت ${done} ملفات بنجاح`:"رُفع الملف بنجاح",true);
+      $("#f-title").value="";$("#f-desc").value="";input.value="";setFiles([]);
+    }
+  }catch(err){msg(err.message)}
+  btn.disabled=false;$("#progress").hidden=true;bar.style.width=0;$("#progress-t").textContent="";renderList();
+};
+
+function startEdit(id){
+  const it=items.find(i=>i.id===id);if(!it)return;editing=id;
+  $("#f-grade").value=it.grade;$("#f-grade").onchange();$("#f-subject").value=it.subject;
+  setRadio("term",it.term);setRadio("type",it.type);setRadio("audience",it.audience);
+  $("#f-title").value=it.title;$("#f-desc").value=it.desc||"";input.value="";input.multiple=false;setFiles([]);
+  $("#form-title").textContent="تعديل: "+it.title;$("#save-btn").textContent="حفظ التعديلات";$("#cancel-edit").hidden=false;
+  $("#drop-t").textContent="لاستبدال الملف اختر ملفًا جديدًا";$("#drop-p").textContent="اتركه فارغًا لإبقاء الملف الحالي: "+it.fileName;
+  $("#up-form").classList.add("editing");$("#form-msg").hidden=true;window.scrollTo({top:0,behavior:"smooth"});
+}
+function stopEdit(){
+  editing=null;input.multiple=true;input.value="";setFiles([]);$("#f-title").value="";$("#f-desc").value="";
+  $("#form-title").textContent="رفع ملف جديد";$("#save-btn").textContent="رفع الملفات";$("#cancel-edit").hidden=true;
+  $("#drop-t").textContent="اضغط لاختيار الملفات أو اسحبها إلى هنا";$("#drop-p").textContent="PDF أو Word أو PowerPoint أو صور. حتى 25 ميغابايت للملف. يمكنك اختيار عدة ملفات معًا.";
+  $("#up-form").classList.remove("editing");
+}
+$("#cancel-edit").onclick=()=>{stopEdit();$("#form-msg").hidden=true};
+
+async function del(id,btn){
+  if(btn.dataset.sure!=="1"){btn.dataset.sure="1";btn.textContent="تأكيد الحذف؟";btn.classList.add("danger");
+    setTimeout(()=>{if(btn.isConnected){btn.dataset.sure="";btn.textContent="حذف";btn.classList.remove("danger")}},4000);return}
+  btn.disabled=true;
+  try{await api("/api/items/"+id,{method:"DELETE"});items=items.filter(i=>i.id!==id);if(editing===id)stopEdit();renderList()}
+  catch(err){btn.disabled=false;alertList(err.message)}
+}
+function alertList(t){$("#items").insertAdjacentHTML("afterbegin",`<div class="msg bad">${esc(t)}</div>`)}
+
+function renderList(){
+  const g=$("#q-grade").value,s=$("#q-subject").value,t=$("#q-type").value,q=$("#q-text").value.trim();
+  const list=items.filter(i=>(!g||String(i.grade)===g)&&(!s||i.subject===s)&&(!t||i.type===t)&&(!q||i.title.includes(q)));
+  $("#count").textContent=`(${items.length})`;
+  $("#items").innerHTML=list.length?list.map(i=>`
+    <div class="item">
+      <span class="file">${esc(i.label||"PDF")}</span>
+      <div class="body">
+        <h3>${esc(i.title)}</h3>
+        <div class="meta">
+          <span class="chip">الصف ${NAMES[i.grade-1]}</span><span class="chip">${esc(SUBJ[i.subject]||i.subject)}</span>
+          <span class="chip">الفصل ${i.term===1?"الأول":"الثاني"}</span><span class="chip">${TYPE_AR[i.type]}</span>
+          ${i.audience==="teacher"?'<span class="chip t">للمعلمين فقط</span>':""}<span class="chip">${size(i.size)}</span>
+        </div>
+      </div>
+      <div class="acts">
+        <a class="btn ghost sm" href="/files/${i.id}/${encodeURIComponent(i.fileName)}" target="_blank" rel="noopener">فتح</a>
+        <button class="btn ghost sm" type="button" data-edit="${i.id}">تعديل</button>
+        <button class="btn ghost sm" type="button" data-del="${i.id}">حذف</button>
+      </div>
+    </div>`).join(""):`<div class="empty">${items.length?"لا توجد ملفات تطابق التصفية.":"لم تُرفع أي ملفات بعد. ابدأ برفع أول كتاب أو مراجعة من النموذج أعلاه."}</div>`;
+  $("#items").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));
+  $("#items").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>del(b.dataset.del,b));
+}
+
+async function load(){
+  try{const r=await api("/api/items");items=r.items;renderList()}
+  catch(err){$("#items").innerHTML="";alertList(err.message)}
+}
+if(token){show("admin");api("/api/session").then(load).catch(()=>{})}else show("login");
+</script>
+</body>
+</html>

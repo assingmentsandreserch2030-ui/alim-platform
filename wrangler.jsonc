@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // اسم العامل في Cloudflare، يجب أن يبقى كما هو
+  "name": "alim-platform",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  // ملفات الموقع الثابتة (index.html و admin.html)، والملفات المستثناة في .assetsignore
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/files/*"]
+  },
+  // مخزن الملفات المرفوعة وبياناتها
+  "kv_namespaces": [
+    { "binding": "FILES", "id": "64b6848699ad444380aad00f2ef844d7" }
+  ],
+  // كلمة مرور الإدارة لا تُكتب هنا: تُضاف من لوحة Cloudflare كمتغير سري باسم ADMIN_PASSWORD
+  "keep_vars": true,
+  "observability": { "enabled": true }
+}
